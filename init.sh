@@ -18,5 +18,3 @@ else
     terraform_apply
 
 fi
-
-terraform output -raw instance_public_ip >../ansible/inventory
