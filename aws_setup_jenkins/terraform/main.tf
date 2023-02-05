@@ -8,9 +8,8 @@ terraform {
 }
 
 provider "aws" {
-  region = "us-east-1"
+  region = var.aws_region
 }
-
 
 data "aws_ami" "amazon-linux-2" {
   most_recent = true
@@ -27,25 +26,9 @@ data "aws_ami" "amazon-linux-2" {
 
 }
 
-resource "tls_private_key" "key_pair" {
-  algorithm = "RSA"
-}
-
-resource "local_file" "jenkins_public_key" {
-  content         = aws_key_pair.jenkins_key.public_key
-  filename        = "../../jenkins.pem"
-  file_permission = "0400"
-}
-
-resource "aws_key_pair" "jenkins_key" {
-  key_name   = "jenkins_ssh_key"
-  public_key = tls_private_key.key_pair.public_key_openssh
-}
-
 resource "aws_instance" "Jenkins" {
-  ami = data.aws_ami.amazon-linux-2.id
-  # TODO move t2 into variables
-  instance_type          = "t2.micro"
+  ami                    = data.aws_ami.amazon-linux-2.id
+  instance_type          = var.instance_type
   vpc_security_group_ids = [aws_security_group.sg_jenkins.id]
 
   key_name = aws_key_pair.jenkins_key.key_name
@@ -54,10 +37,6 @@ resource "aws_instance" "Jenkins" {
     "Name" = "Jenkins"
   }
 }
-
-
-
-
 
 
 resource "aws_security_group" "sg_jenkins" {
@@ -71,6 +50,7 @@ resource "aws_security_group" "sg_jenkins" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 
+  # TODO = security issue with incoming 0.0.0.0/0
   ingress {
     from_port   = 22
     to_port     = 22
