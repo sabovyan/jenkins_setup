@@ -11,30 +11,33 @@ provider "aws" {
   region = var.aws_region
 }
 
-data "aws_ami" "amazon-linux-2" {
+data "aws_ami" "ubuntu" {
+
   most_recent = true
 
   filter {
     name   = "name"
-    values = ["amzn2-ami-hvm*"]
+    values = ["ubuntu/images/hvm-ssd/ubuntu-focal-20.04-amd64-server-*"]
   }
 
   filter {
-    name   = "owner-alias"
-    values = ["amazon"]
+    name   = "virtualization-type"
+    values = ["hvm"]
   }
 
+  owners = ["099720109477"]
 }
 
 resource "aws_instance" "Jenkins" {
-  ami                    = data.aws_ami.amazon-linux-2.id
+  ami                    = data.aws_ami.ubuntu.id
   instance_type          = var.instance_type
   vpc_security_group_ids = [aws_security_group.sg_jenkins.id]
 
   key_name = aws_key_pair.jenkins_key.key_name
 
   tags = {
-    "Name" = "Jenkins"
+    Name  = "Jenkins"
+    group = "Jenkins"
   }
 }
 
@@ -42,6 +45,10 @@ resource "aws_instance" "Jenkins" {
 resource "aws_security_group" "sg_jenkins" {
   name        = "sg_jenkins"
   description = "Allow HTTP and SSH traffic via Terraform"
+
+  tags = {
+    "group" = "Jenkins"
+  }
 
   ingress {
     from_port   = 80

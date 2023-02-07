@@ -1,20 +1,29 @@
 #!/bin/bash
 set -e
 
-source ./aws_setup.sh
-cd aws_setup_jenkins/terraform
-
 terraform_apply() {
-    echo "apply aws infrastructure"
+    echo "Apply aws infrastructure"
     terraform apply --auto-approve
 }
 
-if [ -d ".terraform" ]; then
+run_ansible() {
+    cd ../ansible
+    ansible-playbook -i inventory initialize.yml
+}
+
+create_infra() {
     terraform_apply
+    run_ansible
+}
+
+source ./aws_setup.sh
+cd aws_setup_jenkins/terraform
+
+if [ -d ".terraform" ]; then
+    create_infra
 
 else
-    echo "it needs to initialize terraform"
+    echo "First it needs to be initialized"
     terraform init
-    terraform_apply
-
+    create_infra
 fi

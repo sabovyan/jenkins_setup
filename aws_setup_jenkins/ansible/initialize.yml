@@ -1,0 +1,19 @@
+- name: Initialize Project
+  hosts: all
+  ignore_unreachable: true
+  become: true
+  become_user: root
+
+  tasks:
+    - name: Ping my hosts
+      ansible.builtin.ping:
+
+    - name: update packages
+      ansible.builtin.apt:
+        name: "*"
+        state: latest
+
+    - name: Install nginx
+      ansible.builtin.apt:
+        name: nginx
+        state: present
