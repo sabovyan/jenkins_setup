@@ -17,3 +17,32 @@
       ansible.builtin.apt:
         name: nginx
         state: present
+
+    - name: Create app directory
+      ansible.builtin.file:
+        path: "app"
+        state: directory
+
+    - name: Create Index html
+      ansible.builtin.copy:
+        src: ../../src/index.html
+        dest: app/index.html
+
+    - name: Create Jenkins html
+      ansible.builtin.copy:
+        src: ../../src/jenkins.html
+        dest: app/jenkins.html
+
+    - name: copy nginx configuration
+      ansible.builtin.copy:
+        src: ../nginx/main.conf
+        dest: /etc/nginx/sites-available/main.conf
+
+    - name: Create symlink to enable site
+      ansible.builtin.file:
+        src: /etc/nginx/sites-available/main.conf
+        dest: /etc/nginx/sites-enabled/main.conf
+        state: link
+
+    - name: restart nginx
+      service: name=nginx state=restarted enabled=yes
