@@ -5,9 +5,6 @@
   become_user: root
 
   tasks:
-    - name: Ping my hosts
-      ansible.builtin.ping:
-
     - name: update packages
       ansible.builtin.apt:
         name: "*"
@@ -23,7 +20,7 @@
         url: https://pkg.jenkins.io/debian-stable/jenkins.io.key
         state: present
 
-    - name: ensure the repository is configured
+    - name: ensure jenkins repository is configured
       ansible.builtin.apt_repository:
         repo: "deb https://pkg.jenkins.io/debian-stable binary/"
         state: present
@@ -44,16 +41,6 @@
     - name: daemon-reload to pick up config changes
       ansible.builtin.systemd:
         daemon_reload: yes
-
-    - name: Create app directory
-      ansible.builtin.file:
-        path: "app"
-        state: directory
-
-    - name: Create Index html
-      ansible.builtin.copy:
-        src: ../../src/index.html
-        dest: app/index.html
 
     - name: copy nginx configuration
       ansible.builtin.copy:

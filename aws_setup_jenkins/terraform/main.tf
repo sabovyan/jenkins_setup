@@ -41,6 +41,19 @@ resource "aws_instance" "Jenkins" {
   }
 }
 
+resource "aws_instance" "App" {
+  ami                    = data.aws_ami.ubuntu.id
+  instance_type          = var.instance_type
+  vpc_security_group_ids = [aws_security_group.sg_jenkins.id]
+
+  key_name = aws_key_pair.jenkins_key.key_name
+
+  tags = {
+    Name  = "main_app"
+    group = "main_app"
+  }
+}
+
 
 resource "aws_security_group" "sg_jenkins" {
   name        = "sg_jenkins"
