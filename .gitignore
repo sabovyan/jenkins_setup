@@ -14,3 +14,6 @@ test_es2_key.pem
 
 # ansible
 inventory
+
+# personal configurations and tokens
+secrets/**
