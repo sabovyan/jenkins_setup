@@ -8,61 +8,60 @@ terraform {
 }
 
 provider "aws" {
-  region = "us-east-1"
+  region = var.aws_region
 }
 
+data "aws_ami" "ubuntu" {
 
-data "aws_ami" "amazon-linux-2" {
   most_recent = true
 
   filter {
     name   = "name"
-    values = ["amzn2-ami-hvm*"]
+    values = ["ubuntu/images/hvm-ssd/ubuntu-focal-20.04-amd64-server-*"]
   }
 
   filter {
-    name   = "owner-alias"
-    values = ["amazon"]
+    name   = "virtualization-type"
+    values = ["hvm"]
   }
 
-}
-
-resource "tls_private_key" "key_pair" {
-  algorithm = "RSA"
-}
-
-resource "local_file" "jenkins_public_key" {
-  content         = aws_key_pair.jenkins_key.public_key
-  filename        = "../../jenkins.pem"
-  file_permission = "0400"
-}
-
-resource "aws_key_pair" "jenkins_key" {
-  key_name   = "jenkins_ssh_key"
-  public_key = tls_private_key.key_pair.public_key_openssh
+  owners = ["099720109477"]
 }
 
 resource "aws_instance" "Jenkins" {
-  ami = data.aws_ami.amazon-linux-2.id
-  # TODO move t2 into variables
-  instance_type          = "t2.micro"
+  ami                    = data.aws_ami.ubuntu.id
+  instance_type          = var.instance_type
   vpc_security_group_ids = [aws_security_group.sg_jenkins.id]
 
   key_name = aws_key_pair.jenkins_key.key_name
 
   tags = {
-    "Name" = "Jenkins"
+    Name  = "Jenkins"
+    group = "Jenkins"
   }
 }
 
+resource "aws_instance" "App" {
+  ami                    = data.aws_ami.ubuntu.id
+  instance_type          = var.instance_type
+  vpc_security_group_ids = [aws_security_group.sg_jenkins.id]
 
+  key_name = aws_key_pair.jenkins_key.key_name
 
-
+  tags = {
+    Name  = "main_app"
+    group = "main_app"
+  }
+}
 
 
 resource "aws_security_group" "sg_jenkins" {
   name        = "sg_jenkins"
   description = "Allow HTTP and SSH traffic via Terraform"
+
+  tags = {
+    "group" = "Jenkins"
+  }
 
   ingress {
     from_port   = 80
@@ -71,6 +70,7 @@ resource "aws_security_group" "sg_jenkins" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 
+  # TODO = security issue with incoming 0.0.0.0/0
   ingress {
     from_port   = 22
     to_port     = 22
@@ -86,12 +86,4 @@ resource "aws_security_group" "sg_jenkins" {
   }
 }
 
-output "instance_public_ip" {
-  value = aws_instance.Jenkins.public_ip
-}
-
-# TODO replace public id with dns
-output "dns" {
-  value = aws_instance.Jenkins.public_dns
-}
 

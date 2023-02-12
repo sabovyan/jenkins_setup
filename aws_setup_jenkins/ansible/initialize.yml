@@ -1,0 +1,65 @@
+- name: Initialize Project
+  hosts: all
+  ignore_unreachable: true
+  become: true
+  become_user: root
+
+  tasks:
+    - name: update packages
+      ansible.builtin.apt:
+        name: "*"
+        state: latest
+
+    - name: Install nginx
+      ansible.builtin.apt:
+        name: nginx
+        state: present
+
+    - name: ensure the jenkins apt repository key is installed
+      ansible.builtin.apt_key:
+        url: https://pkg.jenkins.io/debian-stable/jenkins.io.key
+        state: present
+
+    - name: ensure jenkins repository is configured
+      ansible.builtin.apt_repository:
+        repo: "deb https://pkg.jenkins.io/debian-stable binary/"
+        state: present
+
+    - name: Install Java
+      ansible.builtin.apt:
+        name: default-jdk
+        state: present
+
+    - name: ensure jenkins is installed
+      ansible.builtin.apt:
+        name: jenkins
+        state: present
+
+    - name: ensure jenkins is running
+      service: name=jenkins state=started
+
+    - name: daemon-reload to pick up config changes
+      ansible.builtin.systemd:
+        daemon_reload: yes
+
+    - name: copy nginx configuration
+      ansible.builtin.copy:
+        src: ../nginx/main.conf
+        dest: /etc/nginx/sites-available/main.conf
+
+    - name: Create symlink to enable site
+      ansible.builtin.file:
+        src: /etc/nginx/sites-available/main.conf
+        dest: /etc/nginx/sites-enabled/main.conf
+        state: link
+
+    - name: restart nginx
+      ansible.builtin.systemd:
+        name: nginx
+        state: restarted
+        enabled: yes
+
+    - name: Start jenkins
+      ansible.builtin.systemd:
+        name: jenkins
+        state: started
