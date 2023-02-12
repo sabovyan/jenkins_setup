@@ -8,11 +8,11 @@ pipeline {
     stages {
         stage('Build') {
             steps {
-                sh 'docker build -t sabovyan/main_app ./app'
+                sh 'docker build -t sabovyan/main_app:0.1 ./app'
 
                 sh 'echo $DOCKERHUB_CREDENTIALS_PSW | docker login -u $DOCKERHUB_CREDENTIALS_USR --password-stdin'
 
-                sh 'docker push sabovyan/main_app'
+                sh 'docker push sabovyan/main_app:0.1'
             }
         }
 
