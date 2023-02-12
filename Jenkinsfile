@@ -4,8 +4,7 @@ pipeline {
     stages {
         stage('Build') {
             steps {
-                echo 'Building..'
-                echo "Running ${env.BUILD_ID} on ${env.JENKINS_URL}"
+                sh 'docker build -t lloydmatereke/jenkins-docker-hub .'
             }
         }
         stage('Test') {
